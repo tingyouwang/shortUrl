@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<form method="POST" enctype="multipart/form-data" id="fileUploadForm">
+  <input type="text" name="extraField"/><br/><br/>
+  <input type="file" name="files"/><br/><br/>
+  <input type="file" name="files"/><br/><br/>
+  <input type="submit" value="upload" id="btnSubmit"/>
+</form>
+
+<pre>
+    <span id="result"></span>
+</pre>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+
+</body>
+<script>
+$(document).ready(function () {
+
+    $("#btnSubmit").click(function (event) {
+
+        //stop submit the form, we will post it manually.
+        event.preventDefault();
+
+        fire_ajax_submit();
+
+    });
+
+});
+
+function fire_ajax_submit() {
+
+    // Get form
+    var form = $('#fileUploadForm')[0];
+
+    var data = new FormData(form);
+
+	console.log(data);
+
+    data.append("CustomField", "This is some extra data, testing");
+
+    $("#btnSubmit").prop("disabled", true);
+
+    $.ajax({
+        type: "POST",
+		xhrFields: {
+			responseType: "arraybuffer"
+		},
+        enctype: 'multipart/form-data',
+        url: "http://www.zhenruyijewelry.com:8888/ws/api/v1/getexcel",
+        data: data,
+        //http://api.jquery.com/jQuery.ajax/
+        //http://developer.mozilla.org/en-US/docs/Web/API/FormData/Using_FormData_Objects
+        processData: false, //prevent jQuery from automatically transforming the data into a query string
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+		//xhrFields: {withCredentials: true, responseType:'arraybuffer'},
+                success : function(result) {
+				const blob = new Blob([result], {type:"application/vnd.ms-excel;charset=UTF-8"});
+				if(blob.size < 1) {
+					alert('匯出失敗，匯出的內容為空！');
+					return
+				}
+				if(window.navigator.msSaveOrOpenBlob) { navigator.msSaveOrOpenBlob(blob, '22test.xlsx') }
+				else { const aLink = document.createElement('a'); aLink.style.display = 'none';
+			aLink.href = window.URL.createObjectURL(blob); aLink.download = '33test.xlsx'; document.body.appendChild(aLink); aLink.click();
+			document.body.removeChild(aLink); }
+			},
+                error : function (res) {
+                  console.log(res)
+                }
+    });
+
+}
+</script>
+</html>
