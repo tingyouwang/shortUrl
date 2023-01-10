@@ -33,9 +33,4 @@ public class ShortUrlController {
 
   }
 
-  @GetMapping(value = {"/ws/api/v1/eric"})
-  public String tttt() {
-    return "hi";
-  }
-
 }

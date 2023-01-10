@@ -9,7 +9,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.*;
 
 import com.mashape.unirest.http.JsonNode;
 import org.apache.poi.ss.usermodel.Cell;
@@ -26,7 +26,6 @@ public class ShortUrlService {
   public void getExcel(MultipartFile excelFile, String key, HttpServletResponse response) throws IOException {
     log.debug("into service");
     InputStream inputStream = excelFile.getInputStream();
-//    var file = new FileInputStream(String.valueOf(inputStream));
     Workbook workbook = new XSSFWorkbook(inputStream);
     Sheet sheet = workbook.getSheetAt(0);
 
@@ -42,18 +41,20 @@ public class ShortUrlService {
         json.put("url", targetUrl);
 
         String url = "https://api.reurl.cc/shorten";
-        JsonNode apiRes = RequestHelper.reqReurl(key, json.toString(), url);
-        if (null == apiRes) {
-          continue;
+        try {
+          JsonNode apiRes = RequestHelper.reqReurl(key, json.toString(), url);
+          if (null == apiRes) {
+            log.debug("long url:{}", json.get("url"));
+            continue;
+          }
+          String shortUrl = apiRes.getObject().get("short_url").toString();
+          Cell shortUrlCell = row.createCell(13);
+          shortUrlCell.setCellValue(shortUrl);
+        } catch (Exception ignore) {
+          // excel long url is wrong, cause time out
         }
-        String shortUrl = apiRes.getObject().get("short_url").toString();
-        Cell shortUrlCell = row.createCell(13);
-        shortUrlCell.setCellValue(shortUrl);
       }
     }
-
-//    FileOutputStream outputStream = new FileOutputStream(fileLocation);
-//    workbook.write(outputStream);
 
     response.setCharacterEncoding("UTF-8");
     response.setContentType("application/vnd.ms-excel; charset=utf-8");
